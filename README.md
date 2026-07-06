@@ -3,6 +3,7 @@ The system manages medicine catalogs, supplier information, inventory batches, p
 
 
 Group Members
+
   -  Elham Mohamod
   -  Helina Mogesse
   -  Hidaya yesuf
