@@ -1,0 +1,119 @@
+1. Abstract
+The pharmaceutical supply chain is fundamental to ensuring the availability, quality, and safe distribution of medicines within healthcare institutions. However, many pharmacies continue to rely on manual record-keeping or fragmented information systems that provide limited visibility into inventory levels, medicine movement, and transaction history. These approaches often result in inaccurate stock records, delayed replenishment of essential medicines, dispensing of expired products, unauthorized inventory modifications, and insufficient accountability for pharmaceutical transactions. Furthermore, the absence of comprehensive audit trails and standardized digital processes poses significant operational, financial, and regulatory challenges, highlighting the need for a secure and auditable pharmaceutical management solution.
+This project proposes PharmaTrack, an Auditable Pharmaceutical Supply Chain Management REST API, designed to automate and secure pharmaceutical inventory and transaction management through a modern, enterprise-grade backend platform. Rather than implementing a monolithic web application, the project focuses on developing a robust RESTful API that serves as the core business layer for pharmaceutical operations. The system manages medicine catalogs, supplier information, inventory batches, procurement records, stock movements, prescription and dispensing transactions, and comprehensive audit logs, enabling complete traceability throughout the pharmaceutical supply chain.
+The proposed solution is developed using Spring Boot and follows a domain-driven, microservice-inspired architecture that separates core business domains including Identity and Access Management, Medicine Catalog, Inventory Management, Procurement, Pharmaceutical Transactions, Audit Management, and Notification Services. Data persistence is implemented using Spring Data JPA with PostgreSQL, modeling relationships among medicines, suppliers, inventory batches, purchase orders, users, and pharmaceutical transactions. Security is enforced through JWT-based authentication and role-based authorization, ensuring controlled access for administrators, pharmacists, inventory managers, procurement officers, and auditors. Input validation is implemented using Jakarta Bean Validation, while centralized exception handling conforms to the RFC 7807 Problem Details specification to provide standardized API error responses. The API is documented using OpenAPI (Swagger) to facilitate developer integration and testing, containerized using Docker for consistent deployment across multiple environments, and enriched with JSON-LD to support semantic interoperability with external healthcare information systems. Additionally, the system employs an event-driven communication pattern to process asynchronous business events such as low-stock alerts, inventory updates, and audit notifications, improving scalability and reducing coupling between system components. Comprehensive unit and integration testing are incorporated to ensure software quality, reliability, and maintainability.
+The system provides comprehensive features including secure user and role management, medicine and supplier registration, procurement management, inventory and batch tracking, stock-in and stock-out operations, prescription and dispensing management, automated expiry and low-stock monitoring, transaction history, audit trail generation, and reporting services. Every critical business operation is securely recorded with timestamps and user information to ensure complete traceability, accountability, and compliance with pharmaceutical management standards.
+The successful implementation of PharmaTrack is expected to significantly improve inventory accuracy, strengthen transaction accountability, reduce medication-related risks, and enhance operational efficiency through the automation of pharmaceutical supply chain processes.
+
+2. Problem Statement
+Many pharmacies continue to rely on manual record-keeping methods or fragmented systems to manage medicine inventory and transactions. These approaches introduce several operational challenges:
+•	Difficulty tracking stock levels accurately.
+•	Risk of selling expired medicines.
+•	Lack of accountability regarding who performed specific transactions.
+•	Delayed identification of low-stock items.
+•	Inefficient prescription and dispensing records.
+•	Limited reporting and auditing capabilities.
+These issues can lead to financial losses, reduced operational efficiency, medication errors, and compliance concerns. Therefore, there is a need for an integrated electronic system that provides accurate inventory control, secure transaction management, and complete auditability of pharmaceutical operations.
+3. Project Scope
+In Scope
+User Management Module
+•	User registration and authentication.
+•	Role-based access control.
+•	Management of Admin, Pharmacist, and Cashier accounts.
+•	User activity logging.
+Medicine Management Module
+•	Medicine registration and cataloging.
+•	Category and manufacturer management.
+•	Batch number tracking.
+•	Expiry date monitoring.
+•	Expired medicine alerts.
+Inventory & Prescription Tracking Module
+•	Stock-in and stock-out management.
+•	Inventory level monitoring.
+•	Low-stock notifications.
+•	Prescription recording and tracking.
+•	Medicine dispensing records.
+•	Audit trail generation.
+Reporting Features
+•	Stock reports.
+•	Expired medicine reports.
+•	Transaction history reports.
+•	User activity reports.
+Out of Scope
+•	Online payment processing.
+•	Integration with national healthcare systems.
+•	Mobile application development.
+•	Electronic medical record management.
+•	Multi-branch pharmacy synchronization.
+4. Project Overview
+Project Title
+Auditable Electronic Pharmaceutical Transaction Supply (AEPTS) System
+Project Type
+Web-Based Database Management System
+Target Users
+•	System Administrator
+•	Pharmacist
+•	Cashier
+Objectives
+•	Automate pharmacy inventory management.
+•	Prevent the sale of expired medicines.
+•	Improve stock visibility and control.
+•	Track prescriptions and medicine dispensing.
+•	Provide complete transactiocn auditability.
+•	Enhance accountability through user activity tracking.
+Technology Stack
+Frontend: React
+Backend: Spring boot java
+Database: PostgreSQL
+Communication: REST API, JSON Data Exchange
+
+5. Project Initiation Flow
+Phase 1: Project Initiation
+1.	Identify pharmacy management problems.
+2.	Gather requirements from stakeholders.
+3.	Define project objectives.
+4.	Establish project scope.
+5.	Obtain supervisor approval.
+
+Phase 2: System Analysis
+1.	Analyze functional requirements.
+2.	Analyze non-functional requirements.
+3.	Prepare use case diagrams.
+4.	Create system requirements specification.
+Phase 3: System Design
+1.	Design system architecture.
+2.	Design database schema.
+3.	Design user interfaces.
+4.	Design API endpoints.
+5.	Review and validate design.
+Phase 4: Development
+1.	Develop User Management Module.
+2.	Develop Medicine Management Module.
+3.	Develop Inventory & Prescription Module.
+4.	Implement Audit Trail functionality.
+5.	Integrate all modules.
+Phase 5: Testing
+1.	Unit Testing.
+2.	Integration Testing.
+3.	System Testing.
+4.	User Acceptance Testing.
+5.	Bug fixing and optimization.
+Phase 6: Deployment & Documentation
+1.	Deploy application.
+2.	Prepare technical documentation.
+3.	Prepare user manual.
+4.	Demonstrate system functionality.
+5.	Final project submission.
+6. Expected Deliverables
+•	Software Requirements Specification (SRS)
+•	System Design Document
+•	Database Design (ER Diagram)
+•	Source Code Repository
+•	Fully Functional Web Application
+•	Test Report
+•	User Manual
+•	Final Project Report
+•	Project Presentation
+
+7. Expected Outcomes
+Upon completion, the AEPTS System will provide a secure and efficient platform for managing pharmaceutical inventory and transactions. The system will improve stock accuracy, reduce medication-related risks, enhance accountability through audit trails, and demonstrate the practical application of software engineering methodologies and web development technologies.
