@@ -6,7 +6,7 @@ Group Members
 
   -  Elham Mohamod
   -  Helina Mogesse
-  -  Hidaya yesuf
+  -  Hidaya Yusuf
   -  Israel Kebede
   -  Mathewos kebede
 
