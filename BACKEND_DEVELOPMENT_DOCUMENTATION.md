@@ -2,7 +2,6 @@
 
 > **Purpose of this document:** This guide explains *how* the PharmaTrack backend was developed, *what every Java annotation does*, *why each entity exists*, and *what each layer of the architecture is responsible for*. It is written as an exhaustive reference for presenting and defending the project (code review, project defense, or documentation submission).
 
----
 
 ## Table of Contents
 
@@ -27,9 +26,8 @@
 16. [End-to-End Request Flow (a Full Walkthrough)](#16-end-to-end-request-flow-a-full-walkthrough)
 17. [Key Business Logic Deep Dives](#17-key-business-logic-deep-dives)
 18. [Design Decisions & Trade-offs](#18-design-decisions--trade-offs)
-19. [How to Present This (Quick Talking Points)](#19-how-to-present-this-quick-talking-points)
+19. [Schema](#19-schema)
 
----
 
 ## 1. Project Overview & Goals
 
@@ -52,7 +50,6 @@ The system manages:
 4. Controlled access — role/authority-based authorization enforced at the API level.
 5. Traceable prescription and dispensing records with a pharmacist → cashier workflow.
 
----
 
 ## 2. Technology Stack and Why These Technologies
 
@@ -71,7 +68,6 @@ The system manages:
 
 > **Why Spring Boot rather than plain Java?** Spring Boot's auto-configuration removes almost all boilerplate: dependency injection, transaction management, database connection pool setup, security defaults, and JSON conversion all "just work" from dependencies on the classpath.
 
----
 
 ## 3. Project Structure — The Layered Architecture
 
@@ -215,7 +211,6 @@ Each layer depends ONLY on the interface of the layer below it, never on its imp
 - **Reusability:** business logic in services can be called from controllers, scheduled jobs, or CLI tools.
 - **Swappability:** the DAO interface means the persistence implementation could be swapped (e.g., JDBC) without touching services.
 
----
 
 ## 4. How the Backend Was Developed (Methodology & Process)
 
@@ -246,7 +241,6 @@ The code was written layer by layer, **bottom-up**, so each layer could be compi
 - **Server-side pricing:** the selling price is *always computed on the server* (batch unit cost × 1.2 markup) and never trusted from the client — this is why `DispensingRecord.unitPrice/totalPrice` are set inside the service.
 - **Quantity integrity:** batch `quantity` vs `quantityRemaining` split — see [section 17](#17-key-business-logic-deep-dives).
 
----
 
 ## 5. The Entry Point — `@SpringBootApplication`
 
@@ -272,7 +266,6 @@ It is a **meta-annotation** combining three annotations:
 
 > **Why does the class sit in the root package?** `@ComponentScan` starts from `PharmaTrackApplication`'s package. If the class were in a different package than the controllers/services, Spring would not find them. Placing it in `com.example.PharmaTrack` ensures every sub-package is scanned.
 
----
 
 ## 6. Build & Configuration Files (`pom.xml` and `application.properties`)
 
@@ -335,7 +328,6 @@ logging.level.com.example.PharmaTrack=DEBUG
 | `default-property-inclusion=non_null` | Null fields are omitted from JSON, keeping responses clean. |
 | `app.security.authorities.*` | The authority names used by `@PreAuthorize` are **configurable** (read into the `AppAuthorities` bean) rather than hard-coded strings in Java. They are matched against rows in the `authorities` table. |
 
----
 
 ## 7. The Entity Layer (Database Model)
 
@@ -449,13 +441,11 @@ These are evaluated when a `@Valid` object arrives at a controller. This impleme
 | Security | `@EnableWebSecurity`, `@EnableMethodSecurity`, `@PreAuthorize` |
 | Errors | `@ExceptionHandler`, `@ResponseStatus` |
 
----
 
 ### 7.2 Entity-by-Entity Deep Dive
 
 For each entity: **why it exists**, **what it models**, **its fields**, and **the interesting annotations on it**.
 
----
 
 #### 7.2.1 `User` → table `users`
 
@@ -480,7 +470,6 @@ For each entity: **why it exists**, **what it models**, **its fields**, and **th
 - Spring Security, however, is fed from the generic `authorities` table through a many-to-many join — authority names are **database-driven and configurable**, nothing hard-coded in the security config.
 - `DataInitializer` back-fills `authorities` from `role` for existing users, and `UserServiceImpl.syncAuthoritiesFromRole(...)` keeps them in sync on create/update.
 
----
 
 #### 7.2.2 `Role` (enum, not a table)
 
@@ -490,7 +479,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Why it exists:** a closed set of business roles the pharmacy understands. Stored as a string (`@Enumerated(STRING)`) so the DB stays readable and reordering the enum never corrupts data.
 
----
 
 #### 7.2.3 `Authority` → table `authorities`
 
@@ -500,7 +488,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Why an `Authority` entity instead of hard-coding `ROLE_...` strings in `SecurityConfig`?** Requirement-level decision: "No authority name is hard-coded in the security configuration — everything is read dynamically from the database at runtime." It also allows *generic* (non-pharmacy) authority names.
 
----
 
 #### 7.2.4 `Category` → table `categories`
 
@@ -510,7 +497,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Interesting annotations:** `@JsonIgnore` on the collection — otherwise serializing a category would serialize every medicine, and each medicine would serialize its category again → infinite recursion / huge payloads.
 
----
 
 #### 7.2.5 `Manufacturer` → table `manufacturers`
 
@@ -518,7 +504,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Fields:** `id`, `name` (unique, `@NotBlank`, `@Size(max=200)`), `address`, `phone`, `email` (`@Email`), `country`, `medicines` (`@OneToMany` + `@JsonIgnore`), `createdAt`, `updatedAt`.
 
----
 
 #### 7.2.6 `Medicine` → table `medicines`
 
@@ -541,7 +526,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Why `@ManyToOne` (not an embedded string)?** Keeping `category`/`manufacturer` as entities gives referential integrity (FK constraints), lets the UI filter by `categoryId`, and avoids duplicate names.
 
----
 
 #### 7.2.7 `Supplier` → table `suppliers`
 
@@ -549,7 +533,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Fields:** `id`, `code` (unique), `name` (`@NotBlank`), `contactPerson`, `phone`, `email` (`@Email`), `address`, `city`, `country`, `active` (default `true`), `createdAt`, `updatedAt`.
 
----
 
 #### 7.2.8 `InventoryBatch` → table `inventory_batches`
 
@@ -579,7 +562,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Why is quantity never accepted from the API?** `createInventoryBatch` force-sets `quantity = 0` and `quantityRemaining = 0` — quantity is *only* changed by stock movements. The batch PATCH endpoint even strips `quantity`/`quantityRemaining` from the request (`updates.remove("quantity")`). This protects inventory integrity.
 
----
 
 #### 7.2.9 `StockMovement` → table `stock_movements`
 
@@ -602,7 +584,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Why `@Positive`?** A movement of 0 or negative quantity is meaningless; direction is encoded by the *type*, not the sign.
 
----
 
 #### 7.2.10 `Prescription` → table `prescriptions`
 
@@ -630,7 +611,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Why `@JsonIgnoreProperties("prescription")` on the items collection?** Each `PrescriptionItem` has a `@JsonIgnore` on its own `prescription` back-reference, and this annotation additionally protects the serialization path — no infinite recursion.
 
----
 
 #### 7.2.11 `PrescriptionItem` → table `prescription_items`
 
@@ -640,7 +620,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Business helper:** `getTotalQuantity()` returns `quantity × timesPerDay × durationDays` — the *total units needed for the whole course*. The dispensing service uses this to know how much stock to take from batches.
 
----
 
 #### 7.2.12 `DispensingRecord` → table `dispensing_records`
 
@@ -665,7 +644,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Why separate `DispensingRecord` from `StockMovement`?** A stock movement is a *quantity event*; a dispensing record is a *financial + clinical transaction* with prices and payment state. Dispensing *also* writes a `STOCK_OUT` movement, but the two are kept separate so the cashier workflow (approve/void) doesn't corrupt the movement history. Voiding restores stock and writes a compensating `STOCK_IN` movement — the audit trail stays truthful.
 
----
 
 #### 7.2.13 `AuditLog` → table `audit_logs`
 
@@ -688,7 +666,6 @@ public enum Role { ADMIN, PHARMACIST, CASHIER, INVENTORY_MANAGER, PROCUREMENT_OF
 
 **Who writes audit logs?** Every service method (create/update/delete/dispense/stock-in/stock-out), plus `SecurityConfig` on successful **login and logout**. `AuditLogServiceImpl.logAction(...)` centralizes the write and silently skips when there's no authenticated user (e.g. system-triggered ops).
 
----
 
 ### 7.3 Entity Relationship Diagram (textual)
 
@@ -729,7 +706,6 @@ Cardinality summary:
 - `prescription : dispensing_record` = **one-to-many**.
 - Everything referencing a `User` (performed by / dispensed by / processed by) = **many-to-one**.
 
----
 
 ## 8. The DAO / Repository Layer
 
@@ -797,7 +773,6 @@ public class MedicineDAOImpl implements MedicineDAO {
 
 **The `save()` convention (persist vs merge)** appears identically in every DAO impl: new entity (null id) → `persist` (INSERT); existing entity (non-null id) → `merge` (UPDATE). This one method handles both create and update.
 
----
 
 ## 9. The Service Layer (Business Logic)
 
@@ -859,7 +834,6 @@ public MedicineServiceImpl(MedicineDAO medicineDAO, AuditLogService auditLogServ
 | `DispensingRecordServiceImpl` | Create (deduct stock, log movement, compute prices server-side); `approvePayment` (PENDING→PAID, records cashier + time); `voidDispensing` (PENDING→VOIDED, **restores stock** via `STOCK_IN` movement, and marks the linked prescription voided). |
 | `AuditLogServiceImpl` | Central `logAction(...)` that builds and persists `AuditLog` rows; skips when `userId == null`; query helpers (by entity, action, user, date range). |
 
----
 
 ## 10. The Controller Layer (REST API)
 
@@ -945,7 +919,6 @@ public class MedicineController {
 
 **The "never trust the client" rule in controllers:** identity-bearing fields (`performedBy`, `dispensedBy`, `processedBy`, cashier) are **never** taken from the request body — the service always resolves the currently logged-in user via `CurrentUserProvider`. Comments on the approve/void endpoints state this explicitly.
 
----
 
 ## 11. The Security Layer
 
@@ -1056,7 +1029,6 @@ public class AppAuthorities {
 
 **Why a bean for names that are just strings?** So `@PreAuthorize` can reference the bean in SpEL: `@PreAuthorize("hasAuthority(@appAuthorities.admin)")`. The required authority can be changed in `application.properties` **without touching Java code**, and it is matched against authorities stored in the database. Nothing security-related is hard-coded.
 
----
 
 ## 12. The Exception Handling Layer
 
@@ -1127,7 +1099,6 @@ public class ErrorResponse {
 - `@JsonInclude(NON_NULL)` drops optional fields when irrelevant → clean payloads.
 - Used both by `GlobalExceptionHandler` and by the security handlers in `SecurityConfig`.
 
----
 
 ## 13. The DTO Layer (Data Transfer Objects)
 
@@ -1165,7 +1136,6 @@ String notes;
 
 > **Note on the rest of the API:** create/update endpoints take entity objects directly (`@Valid @RequestBody Medicine`). This is a pragmatic shortcut in this project — full DTO-per-resource would be more rigid but adds many files. The critical paths (auth, stock movement, errors) do use dedicated DTOs where it matters.
 
----
 
 ## 14. The Config Layer — `DataInitializer`
 
@@ -1189,7 +1159,6 @@ Key details:
 - Password is encoded with the injected `PasswordEncoder` (BCrypt), never stored in plain text.
 - Property `@Value("${app.security.seed-default-admin:true}")` makes the behavior configurable.
 
----
 
 ## 15. Complete Database Schema (Tables Produced by JPA)
 
@@ -1273,7 +1242,6 @@ audit_logs               id BIGSERIAL PK, entity_type VARCHAR(100) NOT NULL,
                          ip_address VARCHAR(50) NOT NULL, timestamp TIMESTAMP NOT NULL
 ```
 
----
 
 ## 16. End-to-End Request Flow (a Full Walkthrough)
 
@@ -1327,7 +1295,6 @@ Let's trace two real scenarios from HTTP request to database.
 - The linked prescription is marked `voided` (cannot be dispensed again).
 - Record → `VOIDED` with cashier + timestamp; audit `UPDATE`.
 
----
 
 ## 17. Key Business Logic Deep Dives
 
@@ -1378,7 +1345,6 @@ Every mutating path writes an audit row with entity type, entity ID, action, old
 - `LOGIN` / `LOGOUT` on authentication events (from `SecurityConfig`).
 - `AuditLogServiceImpl.logAction` centralizes it and skips gracefully when there's no authenticated user.
 
----
 
 ## 18. Design Decisions & Trade-offs
 
@@ -1399,21 +1365,8 @@ Every mutating path writes an audit row with entity type, entity ID, action, old
 | Audit summaries as `TEXT` (old/new values) | Simple, human-readable, cheap | Not structured — can't query individual diffs |
 | 401 vs 403 distinction | Correct API semantics: unauthenticated ≠ unauthorized | Requires both an entry point and an access-denied handler |
 
----
 
-## 19. How to Present This (Quick Talking Points)
+## 19. Schema
 
-If you are presenting this backend, here's a suggested 5-minute story:
-
-1. **What it is:** an auditable pharmaceutical REST API — not a monolith, but a layered backend serving a React SPA.
-2. **Stack in one line:** Spring Boot 3 (Java 17) + Spring Data JPA + Spring Security + Bean Validation + PostgreSQL.
-3. **The layers:** Controllers (HTTP only) → Services (`@Transactional`, business rules, audit) → DAOs (JPQL via `EntityManager`) → Entities (JPA mappings).
-4. **The entities:** walk the ER diagram — `User`/`Role`/`Authority` (auth), `Category`/`Manufacturer`/`Medicine`/`Supplier` (catalog & procurement), `InventoryBatch`/`StockMovement` (inventory), `Prescription`/`PrescriptionItem`/`DispensingRecord` (transactions), `AuditLog` (audit trail).
-5. **Annotations highlight:** pick 3 to explain deeply — `@SpringBootApplication` (auto-config + component scan), `@Transactional` (atomicity of multi-write ops), `@PreAuthorize` + `@appAuthorities` (configurable, DB-driven authorization).
-6. **The flagship feature:** create-prescription → auto-dispense across FEFO batches → cashier approve/void, all audited.
-7. **Security story:** BCrypt + `WRITE_ONLY` password, DB-stored authorities, 401/403 JSON contract, login/logout audit.
-8. **Audit trail:** show `AuditLog` rows — who, what, when, from which IP, old vs new values.
-
----
-
-*End of document. This guide reflects the code as it exists in the `PharmaTrack` backend module.*
+-	See on the project folder for png file
+-	Pharma_ERD.pgerd.png or Pharma_ERD_schema.png
