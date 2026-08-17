@@ -63,7 +63,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     // Nullable so users registered with generic (non-pharmacy) authority names can exist
     @Column(name = "role")
-    private Role role;
+    private Role role; 
 
     /*
      * ARCHITECTURE: Many-to-many relationship between users and generic authorities
